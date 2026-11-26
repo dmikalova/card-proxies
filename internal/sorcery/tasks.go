@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"maps"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -152,6 +153,9 @@ type Staged struct {
 	// Backs reports whether the run has card backs. Without them the PDF
 	// prints fronts only.
 	Backs bool
+	// Pruned is the number of cached images that the run did not use and
+	// staging removed.
+	Pruned int
 }
 
 // StageRun plans the next run, downloads its card images and writes it to
@@ -187,7 +191,46 @@ func StageRun(ctx context.Context, client *http.Client, p Paths, id string) (*St
 	if err := Stage(dir, planned.Entries, paths, backs); err != nil {
 		return nil, err
 	}
-	return &Staged{Planned: planned, Dir: dir, Images: infos, Backs: backs != nil}, nil
+	keep := slices.Collect(maps.Values(paths))
+	if images.template != "" {
+		keep = append(keep, images.template)
+	}
+	pruned, err := pruneCache(p.Cache, keep)
+	if err != nil {
+		return nil, err
+	}
+	return &Staged{
+		Planned: planned,
+		Dir:     dir,
+		Images:  infos,
+		Backs:   backs != nil,
+		Pruned:  pruned,
+	}, nil
+}
+
+// pruneCache removes every file in the cache that keep does not name, such
+// as the official image of a card that now uses its TCGplayer image, or a
+// card that a run printed. It returns the number of files it removed.
+func pruneCache(dir string, keep []string) (int, error) {
+	entries, err := os.ReadDir(dir)
+	if errors.Is(err, fs.ErrNotExist) {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, fmt.Errorf("read %s: %w", dir, err)
+	}
+	removed := 0
+	for _, e := range entries {
+		path := filepath.Join(dir, e.Name())
+		if e.IsDir() || slices.Contains(keep, path) {
+			continue
+		}
+		if err := os.Remove(path); err != nil {
+			return removed, fmt.Errorf("remove %s: %w", path, err)
+		}
+		removed++
+	}
+	return removed, nil
 }
 
 // imageSource downloads card images: the TCGplayer image with rounded
@@ -197,6 +240,8 @@ type imageSource struct {
 	cache    string
 	products map[string]TCGplayerProduct
 	mask     *CornerMask
+	// template is the cached corner template image.
+	template string
 }
 
 func newImageSource(
@@ -229,6 +274,7 @@ func newImageSource(
 	if err != nil {
 		return nil, err
 	}
+	s.template = path
 	templatePNG, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("read the corner template: %w", err)

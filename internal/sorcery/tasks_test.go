@@ -231,3 +231,25 @@ func TestReport(t *testing.T) {
 		}
 	}
 }
+
+func TestPruneCache(t *testing.T) {
+	dir := t.TempDir()
+	keep := filepath.Join(dir, "002-fireball-b-s-tcgplayer.png")
+	writeFile(t, keep, []byte("new"))
+	writeFile(t, filepath.Join(dir, "002-fireball-b-s.png"), []byte("old"))
+
+	removed, err := pruneCache(dir, []string{keep})
+	if err != nil {
+		t.Fatalf("pruneCache: %v", err)
+	}
+	if got := listDir(
+		t,
+		dir,
+	); removed != 1 ||
+		!slices.Equal(got, []string{"002-fireball-b-s-tcgplayer.png"}) {
+		t.Errorf("pruneCache removed %d, left %v", removed, got)
+	}
+	if removed, err := pruneCache(filepath.Join(dir, "missing"), nil); err != nil || removed != 0 {
+		t.Errorf("pruneCache of a missing directory = %d, %v", removed, err)
+	}
+}

@@ -81,6 +81,9 @@ func (Sorcery) Stage(ctx context.Context) error {
 	if err := report.Write(os.Stdout); err != nil {
 		return err
 	}
+	if staged.Pruned > 0 {
+		fmt.Printf("\nRemoved %d cached images that the run does not use.\n", staged.Pruned)
+	}
 	fmt.Printf("\nStaged run %s in %s. Next: mage sorcery:pdf\n", id, staged.Dir)
 	return nil
 }
