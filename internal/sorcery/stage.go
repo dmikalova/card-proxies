@@ -24,10 +24,11 @@ const cardWidthInches = 63.0 / 25.4
 const MinPPI = 250
 
 // Back image names in the backs directory, without the extension. Each can
-// be a PNG or a JPEG.
+// be a PNG or a JPEG. These are the proxy backs: the official backs with a
+// PROXY logo in place of the Sorcery logo.
 const (
-	spellbookBack = "spellbook"
-	atlasBack     = "atlas"
+	spellbookBack = "spellbook-claude"
+	atlasBack     = "atlas-claude"
 )
 
 // backExtensions are the file extensions of a card back image.

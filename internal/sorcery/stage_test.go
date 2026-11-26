@@ -98,7 +98,7 @@ func TestLoadBacks(t *testing.T) {
 	if _, err := LoadBacks(
 		dir,
 	); err == nil ||
-		!strings.Contains(err.Error(), "atlas.png and atlas.jpeg") {
+		!strings.Contains(err.Error(), atlasBack+".png and "+atlasBack+".jpeg") {
 		t.Errorf("LoadBacks error = %v, want a refusal of two atlas backs", err)
 	}
 }

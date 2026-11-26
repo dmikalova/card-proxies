@@ -12,8 +12,9 @@ Run `mage ci:fix && mage ci:check` before calling work done. It must print
 ## Rules
 
 - **The repository is public.** Commit card data as JSON. Keep card images
-  and card back scans out of git: images go in `cache/` and `runs/`, backs in
-  `backs/`.
+  and the official card back scans out of git: images go in `cache/` and
+  `runs/`, back scans in `backs/`. The proxy backs
+  `backs/sorcery/*-claude.png` are the only committed images.
 - **Hand-edited files are TOML; generated files are JSON.** Edit
   `proxies.toml` and `owned.toml` by hand. Change `cards.json` and
   `printed.json` only through their mage targets, then commit the result.

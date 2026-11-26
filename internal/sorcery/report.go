@@ -99,7 +99,7 @@ func (r *Report) Write(w io.Writer) error {
 	}
 	if r.Staged && !r.Backs {
 		b.WriteString(
-			"\nNo card backs: the PDF prints fronts only. Put a spellbook and an atlas back (PNG or JPEG) in backs/sorcery/ to print backs.\n",
+			"\nNo card backs: the PDF prints fronts only. Put a spellbook-claude and an atlas-claude back (PNG or JPEG) in backs/sorcery/ to print backs.\n",
 		)
 	}
 	if _, err := io.WriteString(w, b.String()); err != nil {

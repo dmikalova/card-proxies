@@ -6,6 +6,7 @@
       "/backs/**/*.png",
       "/backs/**/*.jpg",
       "/backs/**/*.jpeg",
+      "!/backs/sorcery/*-claude.png",
       "/cache/",
       "/runs/"
     ]
