@@ -18,13 +18,20 @@
 [pdf]
 # The create_pdf.py flags for every run. The run adds the card directories,
 # the output path and, if there are no card backs, --only_fronts.
-# A number without a unit is pixels at 300 PPI: "3" is about 0.25 mm. Use
-# "3mm" for millimeters.
+# A number without a unit is pixels at 300 PPI.
 args = [
   "--paper_size", "tabloid",
-  "--extend_edges", "3",
-  "--skip", "4",
   "--fit_backs", "crop",
+  # Crop 3 pixels from each edge and extend the edge, so that a thin border
+  # on an image does not become the bleed. silhouette-card-maker suggests 3.
+  "--extend_edges", "3",
+  # Fill the transparent rounded corners from the corner arc, so that cut
+  # corners show no white sliver. silhouette-card-maker suggests 3.5mm.
+  "--extend_corners", "3.5mm",
+  # Extend the bleed on the outer edges of the outer cards, on the front and
+  # back pages.
+  "--extend_bleed", "2mm",
+  "--extend_bleed_backs", "2mm",
 ]
 
 [images]
