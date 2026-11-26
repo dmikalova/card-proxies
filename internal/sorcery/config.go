@@ -3,8 +3,16 @@ package sorcery
 // Config is the hand-edited proxies.toml of the game: the PDF settings and
 // the want groups.
 type Config struct {
-	PDF   PDFConfig `toml:"pdf"`
-	Wants []Group   `toml:"want"`
+	PDF    PDFConfig    `toml:"pdf"`
+	Images ImagesConfig `toml:"images"`
+	Wants  []Group      `toml:"want"`
+}
+
+// ImagesConfig holds the settings of the card images.
+type ImagesConfig struct {
+	// CornerTemplate is the printing slug of an official card image whose
+	// transparent corners give the shape of the TCGplayer images.
+	CornerTemplate string `toml:"corner_template"`
 }
 
 // PDFConfig holds the create_pdf.py flags of every run. The card directories

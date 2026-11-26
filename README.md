@@ -13,12 +13,13 @@ The first game is Sorcery: Contested Realm.
 A run prints, for each card: the want, minus the owned copies, minus the
 copies that earlier runs printed.
 
-| File                        | Source                                      |
-| --------------------------- | ------------------------------------------- |
-| `data/sorcery/cards.json`   | The public sorcerytcg.com card catalog      |
-| `data/sorcery/proxies.toml` | The want groups and the PDF flags, by hand  |
-| `data/sorcery/owned.toml`   | The owned groups, by hand                   |
-| `data/sorcery/printed.json` | The ledger of printed runs, from the target |
+| File                          | Source                                         |
+| ----------------------------- | ---------------------------------------------- |
+| `data/sorcery/cards.json`     | The public sorcerytcg.com card catalog         |
+| `data/sorcery/tcgplayer.json` | Alpha and Beta printings to TCGplayer products |
+| `data/sorcery/proxies.toml`   | The want groups and the PDF flags, by hand     |
+| `data/sorcery/owned.toml`     | The owned groups, by hand                      |
+| `data/sorcery/printed.json`   | The ledger of printed runs, from the target    |
 
 A group selects cards by name, set, product and rarity. Each card gets a
 playset by rarity unless the group sets a quantity: Ordinary 4, Exceptional
@@ -58,9 +59,13 @@ Commit `data/sorcery/cards.json`. A diff shows the new cards and printings.
 
 ## Known limits
 
-- The Alpha, Beta and Dragonlord card images are 380 pixels wide, about 150
-  PPI at card size. They print soft. The stage report lists each low
-  resolution image.
+- The official Alpha, Beta and Dragonlord card images are 380 pixels wide,
+  about 150 PPI at card size. For Alpha and Beta, a run uses the 750 x 1048
+  TCGplayer image instead, with the corners of an official card image. Run
+  `mage sorcery:tcgplayer` to update `data/sorcery/tcgplayer.json`, the map of
+  printings to TCGplayer products. Dragonlord, Crusade and Jihad have no
+  sharper image and print soft. The stage report lists each low resolution
+  image.
 - A card image shows the printed rules text. A proxy of an errata card shows
   the new text only if a newer printing has it.
 - Double-faced cards, such as Druid, print the front face only.

@@ -98,6 +98,7 @@ func (rt rewriteTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	req.Header = r.Header.Clone()
 	return rt.base.RoundTrip(req)
 }
 

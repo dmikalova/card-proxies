@@ -27,6 +27,14 @@ args = [
   "--fit_backs", "crop",
 ]
 
+[images]
+# The official Alpha and Beta images are 380 x 531 pixels, about 150 PPI. The
+# printings in data/sorcery/tcgplayer.json use the 750 x 1048 TCGplayer image
+# instead. Run "mage sorcery:tcgplayer" to update that file.
+# TCGplayer images have white corners. This official card image has
+# transparent corners, and gives its shape to the TCGplayer images.
+corner_template = "004-sir_galahad-b-s"
+
 [[want]]
 group = "uniques"
 note = "The Uniques of the sets that I own playsets of."

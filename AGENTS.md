@@ -23,5 +23,7 @@ Run `mage ci:fix && mage ci:check` before calling work done. It must print
 - **Card images show the printed rules text.** An errata proxy needs a
   printing whose image has the new text. Check the image before you add a card
   to the errata group.
+- **tcgcsv.com refuses Go's default User-Agent.** Send a User-Agent header on
+  every request to it.
 - **The card image CDN serves Sites in portrait.** Card fronts are copied as
   they are; only the atlas back turns to portrait.

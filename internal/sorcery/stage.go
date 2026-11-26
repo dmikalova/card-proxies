@@ -175,11 +175,48 @@ func CachedImage(
 	cacheDir string,
 	e *Entry,
 ) (string, ImageInfo, error) {
-	path := filepath.Join(cacheDir, e.Printing+".png")
+	return cachedImage(
+		ctx,
+		client,
+		filepath.Join(cacheDir, e.Printing+".png"),
+		e.Name,
+		e.ImageURL,
+		nil,
+	)
+}
+
+// CachedTCGplayerImage downloads the TCGplayer image of the entry's printing
+// into cacheDir, unless it is there already, and rounds its corners with
+// the mask. It returns the image path and size.
+func CachedTCGplayerImage(
+	ctx context.Context,
+	client *http.Client,
+	cacheDir string,
+	e *Entry,
+	product TCGplayerProduct,
+	mask *CornerMask,
+) (string, ImageInfo, error) {
+	path := filepath.Join(cacheDir, e.Printing+"-tcgplayer.png")
+	return cachedImage(ctx, client, path, e.Name, product.ImageURL(), mask.Round)
+}
+
+// cachedImage downloads url to path, through transform if it is not nil,
+// unless path exists already.
+func cachedImage(
+	ctx context.Context,
+	client *http.Client,
+	path, name, url string,
+	transform func([]byte) ([]byte, error),
+) (string, ImageInfo, error) {
 	if _, err := os.Stat(path); errors.Is(err, fs.ErrNotExist) {
-		data, err := get(ctx, client, e.ImageURL, nil)
+		data, err := get(ctx, client, url, nil)
 		if err != nil {
-			return "", ImageInfo{}, fmt.Errorf("image of %s: %w", e.Name, err)
+			return "", ImageInfo{}, fmt.Errorf("image of %s: %w", name, err)
+		}
+		if transform != nil {
+			if data, err = transform(data); err != nil {
+				return "", ImageInfo{}, fmt.Errorf("image of %s: %w", name, err)
+			}
 		}
 		if err := writeFileAtomic(path, data); err != nil {
 			return "", ImageInfo{}, err

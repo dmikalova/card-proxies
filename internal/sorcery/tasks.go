@@ -43,6 +43,9 @@ func (p Paths) Config() string { return filepath.Join(p.Data, "proxies.toml") }
 // Owned is the hand-edited owned groups.
 func (p Paths) Owned() string { return filepath.Join(p.Data, "owned.toml") }
 
+// TCGplayer maps Alpha and Beta printings to TCGplayer products.
+func (p Paths) TCGplayer() string { return filepath.Join(p.Data, "tcgplayer.json") }
+
 // Ledger is the record of printed runs.
 func (p Paths) Ledger() string { return filepath.Join(p.Data, "printed.json") }
 
@@ -162,6 +165,10 @@ func StageRun(ctx context.Context, client *http.Client, p Paths, id string) (*St
 	if err != nil {
 		return nil, err
 	}
+	images, err := newImageSource(ctx, client, p, planned.Config)
+	if err != nil {
+		return nil, err
+	}
 	paths := make(map[string]string)
 	infos := make(map[string]ImageInfo)
 	for i := range planned.Entries {
@@ -169,7 +176,7 @@ func StageRun(ctx context.Context, client *http.Client, p Paths, id string) (*St
 		if e.Print == 0 {
 			continue
 		}
-		path, info, err := CachedImage(ctx, client, p.Cache, e)
+		path, info, err := images.fetch(ctx, e)
 		if err != nil {
 			return nil, err
 		}
@@ -181,6 +188,83 @@ func StageRun(ctx context.Context, client *http.Client, p Paths, id string) (*St
 		return nil, err
 	}
 	return &Staged{Planned: planned, Dir: dir, Images: infos, Backs: backs != nil}, nil
+}
+
+// imageSource downloads card images: the TCGplayer image with rounded
+// corners if tcgplayer.json maps the printing, else the official image.
+type imageSource struct {
+	client   *http.Client
+	cache    string
+	products map[string]TCGplayerProduct
+	mask     *CornerMask
+}
+
+func newImageSource(
+	ctx context.Context,
+	client *http.Client,
+	p Paths,
+	cfg *Config,
+) (*imageSource, error) {
+	s := &imageSource{client: client, cache: p.Cache}
+	data, err := readOptional(p.TCGplayer())
+	if err != nil || data == nil {
+		return s, err
+	}
+	if s.products, err = ParseTCGplayerProducts(data); err != nil {
+		return nil, err
+	}
+	slug := cfg.Images.CornerTemplate
+	if slug == "" {
+		return nil, fmt.Errorf(
+			"set images.corner_template in %s to round the TCGplayer images",
+			p.Config(),
+		)
+	}
+	template := &Entry{
+		Name:     "the corner template",
+		Printing: slug,
+		ImageURL: fmt.Sprintf(imageURLFormat, slug),
+	}
+	path, _, err := CachedImage(ctx, client, p.Cache, template)
+	if err != nil {
+		return nil, err
+	}
+	templatePNG, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read the corner template: %w", err)
+	}
+	if s.mask, err = NewCornerMask(templatePNG); err != nil {
+		return nil, err
+	}
+	return s, nil
+}
+
+// fetch returns the path and size of the entry's card image. It sets the
+// entry's ImageURL to the source it used.
+func (s *imageSource) fetch(ctx context.Context, e *Entry) (string, ImageInfo, error) {
+	if product, ok := s.products[e.Printing]; ok {
+		e.ImageURL = product.ImageURL()
+		return CachedTCGplayerImage(ctx, s.client, s.cache, e, product, s.mask)
+	}
+	return CachedImage(ctx, s.client, s.cache, e)
+}
+
+// UpdateTCGplayer maps the Alpha and Beta printings to TCGplayer products
+// in tcgplayer.json. It returns the printings without a product.
+func UpdateTCGplayer(ctx context.Context, client *http.Client, p Paths) ([]string, error) {
+	catalog, err := loadCatalog(p)
+	if err != nil {
+		return nil, err
+	}
+	products, unmatched, err := FetchTCGplayerProducts(ctx, client, catalog)
+	if err != nil {
+		return nil, err
+	}
+	data, err := MarshalTCGplayerProducts(products)
+	if err != nil {
+		return nil, err
+	}
+	return unmatched, writeFileAtomic(p.TCGplayer(), data)
 }
 
 // LatestRun is the ID of the newest staged run.

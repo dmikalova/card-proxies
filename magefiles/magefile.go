@@ -118,6 +118,27 @@ func (Sorcery) PDF(ctx context.Context) error {
 	return nil
 }
 
+// TCGplayer maps the Alpha and Beta printings to their sharper TCGplayer
+// images in data/sorcery/tcgplayer.json.
+func (Sorcery) TCGplayer(ctx context.Context) error {
+	p, err := projectPaths()
+	if err != nil {
+		return err
+	}
+	unmatched, err := sorcery.UpdateTCGplayer(ctx, httpClient(), p)
+	if err != nil {
+		return err
+	}
+	if len(unmatched) > 0 {
+		fmt.Printf(
+			"No TCGplayer product, so these use the official image:\n  %s\n",
+			strings.Join(unmatched, "\n  "),
+		)
+	}
+	fmt.Printf("Wrote %s. Commit it.\n", p.TCGplayer())
+	return nil
+}
+
 // Run stages the next run and makes its PDF.
 func (Sorcery) Run(ctx context.Context) {
 	mg.SerialCtxDeps(ctx, Sorcery.Stage, Sorcery.PDF)
