@@ -1,0 +1,68 @@
+# The PDF settings and the want groups for Sorcery: Contested Realm proxies.
+#
+# A want group selects cards by name, set code, product, rarity, or a mix of
+# these. Set codes come from data/sorcery/cards.json:
+#   001 Alpha, 002 Beta, 004 Arthurian Legends, 005 Dragonlord, 006 Gothic,
+#   008 Frost Mage Vs. Lavamancer, 999 Promo.
+#
+# Each card gets a playset by rarity, as the deck limits allow: Ordinary 4,
+# Exceptional 3, Elite 2, and 1 for Uniques, Avatars and tokens. Set quantity
+# or quantities to change it.
+#
+# A run prints, for each card: the want, minus the owned copies in
+# owned.toml, minus the copies already printed. If two groups want the same
+# card, the run uses the larger need, not the sum.
+#
+# Run "mage sorcery:plan" after each change to see the result.
+
+[pdf]
+# The create_pdf.py flags for every run. The run adds the card directories,
+# the output path and, if there are no card backs, --only_fronts.
+# A number without a unit is pixels at 300 PPI: "3" is about 0.25 mm. Use
+# "3mm" for millimeters.
+args = [
+  "--paper_size", "tabloid",
+  "--extend_edges", "3",
+  "--skip", "4",
+  "--fit_backs", "crop",
+]
+
+[[want]]
+group = "uniques"
+note = "The Uniques of the sets that I own playsets of."
+sets = ["002", "004", "006"]
+rarities = ["Unique"]
+
+[[want]]
+group = "dragonlord"
+note = "The Dragonlord mini-set: 12 Uniques and the Dragonlord Avatar."
+sets = ["005"]
+
+[[want]]
+group = "beta-avatars"
+note = "The Beta Avatars of the elements."
+cards = ["Flamecaller", "Geomancer", "Sparkmage", "Waveshaper"]
+sets = ["002"]
+
+[[want]]
+group = "dust-courts"
+note = "The Elite Court Sites from the Dust store."
+cards = ["Court of Equity", "Mobbed Court", "Mock Court", "Overflowing Court"]
+
+[[want]]
+group = "errata"
+note = "Errata cards with a printing that shows the new rules text."
+# Card images show the printed rules text, so a proxy shows the new text only
+# if its printing does. The Frost Mage Vs. Lavamancer printings of these cards
+# do. Only the owned copies of that printing count.
+#
+# Other errata cards have no printing with the new text, so a proxy shows the
+# same text as my cards:
+#   Checked: Infiltrate, Druid.
+#   No newer printing: Sir Galahad, Lord of Lies, Mirage, Grim Guisarme,
+#   Mask of Mayhem, Seirawan Hydra, Daperyll Vampire, Blood Ravens,
+#   Vampire Bats, Lance.
+#   Not checked: Deathspeaker has an Organized Play printing.
+cards = ["Fireball", "Polar Bears"]
+sets = ["008"]
+owned_printing_only = true

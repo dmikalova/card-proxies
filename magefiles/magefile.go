@@ -5,7 +5,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -24,10 +23,6 @@ import (
 )
 
 const (
-	// cookieEnv holds the sorcerytcg.com session cookie, over the Keychain.
-	cookieEnv = "SORCERYTCG_COOKIE"
-	// keychainService is the macOS Keychain item of the session cookie.
-	keychainService = "card-proxies-sorcerytcg"
 	// silhouetteEnv is the path of the silhouette-card-maker checkout.
 	silhouetteEnv = "SILHOUETTE_CARD_MAKER"
 	// runIDFormat names run directories so that the newest sorts last.
@@ -47,25 +42,6 @@ func (Sorcery) Catalog(ctx context.Context) error {
 		return err
 	}
 	fmt.Printf("Wrote %s. Commit it.\n", p.Catalog())
-	return nil
-}
-
-// Collection downloads the owned quantities from sorcerytcg.com into
-// data/sorcery/collection.json. It needs the session cookie of a signed-in
-// browser, from SORCERYTCG_COOKIE or the macOS Keychain.
-func (Sorcery) Collection(ctx context.Context) error {
-	p, err := projectPaths()
-	if err != nil {
-		return err
-	}
-	cookie, err := sessionCookie(ctx)
-	if err != nil {
-		return err
-	}
-	if err := sorcery.UpdateCollection(ctx, httpClient(), p, cookie); err != nil {
-		return err
-	}
-	fmt.Printf("Wrote %s. Commit it.\n", p.Collection())
 	return nil
 }
 
@@ -175,22 +151,6 @@ func projectPaths() (sorcery.Paths, error) {
 
 func httpClient() *http.Client {
 	return &http.Client{Timeout: time.Minute}
-}
-
-// sessionCookie reads the sorcerytcg.com session cookie from cookieEnv, or
-// else from the macOS Keychain.
-func sessionCookie(ctx context.Context) (string, error) {
-	if cookie := os.Getenv(cookieEnv); cookie != "" {
-		return cookie, nil
-	}
-	out, err := exec.CommandContext(ctx, "security", "find-generic-password", "-s", keychainService, "-w").
-		Output()
-	if err != nil {
-		return "", fmt.Errorf("no sorcerytcg.com session cookie in %s or the Keychain. "+
-			"Copy the Cookie request header from a signed-in sorcerytcg.com tab, then run: "+
-			"security add-generic-password -a \"$USER\" -s %s -w", cookieEnv, keychainService)
-	}
-	return string(bytes.TrimSpace(out)), nil
 }
 
 // silhouetteCardMaker finds the silhouette-card-maker checkout and the Python

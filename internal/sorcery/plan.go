@@ -28,28 +28,31 @@ func (e *Entry) Atlas() bool {
 	return e.Type == TypeSite
 }
 
-// BuildPlan merges the lines of each card and subtracts what is owned and
-// already printed. A card in two groups gets the larger of the two wants,
-// not their sum. A group with IgnoreOwned does not subtract owned copies.
+// BuildPlan merges the want lines of each card and subtracts what is owned
+// and already printed. owned holds the owned copies by printing ID, and
+// printed the printed copies by card ID.
+//
+// A line subtracts the owned copies of every printing of the card, or with
+// OwnedPrintingOnly only those from the set of its printing. A card in two
+// groups gets the larger need, not the sum, and the printing of that line.
 // The plan lists spellbook cards before atlas cards, each by name.
 func BuildPlan(lines []Line, owned, printed map[string]int) []Entry {
 	byCard := make(map[string]*Entry)
 	var order []*Entry
 	for _, line := range lines {
 		card := line.Card
-		need := line.Want
-		if !line.IgnoreOwned {
-			need -= owned[card.ID]
+		set := ""
+		if line.OwnedPrintingOnly {
+			set = line.Printing.Set.Code
 		}
+		ownedCopies := ownedOf(card, set, owned)
+		need := line.Quantity - ownedCopies
 		e, ok := byCard[card.ID]
 		if !ok {
 			e = &Entry{
 				CardID:      card.ID,
 				Name:        card.Name,
 				Type:        card.Engine.Type,
-				Printing:    line.Printing.Slug,
-				ImageURL:    line.Printing.ImageURL(),
-				Owned:       owned[card.ID],
 				Printed:     printed[card.ID],
 				DoubleFaced: card.Engine.Back != nil,
 			}
@@ -57,8 +60,13 @@ func BuildPlan(lines []Line, owned, printed map[string]int) []Entry {
 			order = append(order, e)
 		}
 		e.Groups = append(e.Groups, line.Group)
-		e.Want = max(e.Want, line.Want)
-		e.Print = max(e.Print, need)
+		e.Want = max(e.Want, line.Quantity)
+		if !ok || need > e.Print {
+			e.Print = need
+			e.Owned = ownedCopies
+			e.Printing = line.Printing.Slug
+			e.ImageURL = line.Printing.ImageURL()
+		}
 	}
 	entries := make([]Entry, 0, len(order))
 	for _, e := range order {
@@ -69,6 +77,18 @@ func BuildPlan(lines []Line, owned, printed map[string]int) []Entry {
 		return cmp.Or(compareBool(a.Atlas(), b.Atlas()), cmp.Compare(a.Name, b.Name))
 	})
 	return entries
+}
+
+// ownedOf adds up the owned copies of a card's printings, from one set or,
+// if set is empty, from all of them.
+func ownedOf(card *Card, set string, owned map[string]int) int {
+	n := 0
+	for _, p := range card.Printings {
+		if set == "" || p.Set.Code == set {
+			n += owned[p.ID]
+		}
+	}
+	return n
 }
 
 func compareBool(a, b bool) int {

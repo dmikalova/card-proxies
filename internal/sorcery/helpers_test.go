@@ -20,6 +20,12 @@ func printing(id, slug, set, finish string, at time.Time) Printing {
 	}
 }
 
+func boxTopper(id, slug, set string) Printing {
+	p := printing(id, slug, set, "Standard", older)
+	p.Meta.Product = "BoxTopper"
+	return p
+}
+
 // testCatalog is a small catalog with one card of each case the code
 // handles.
 func testCatalog(t *testing.T) *Catalog {
@@ -54,7 +60,7 @@ func testCatalog(t *testing.T) *Catalog {
 			Engine: Engine{Type: "Avatar", Back: &struct {
 				Type string `json:"type"`
 			}{Type: "Avatar"}},
-			Printings: []Printing{printing("druid-bt", "004-druid-bt-s", "004", "Standard", older)},
+			Printings: []Printing{boxTopper("druid-bt", "004-druid-bt-s", "004")},
 		},
 		{
 			ID:     "bats",
@@ -62,6 +68,7 @@ func testCatalog(t *testing.T) *Catalog {
 			Engine: Engine{Type: "Minion", Rarity: "Ordinary"},
 			Printings: []Printing{
 				printing("bats-beta", "002-vampire_bats-b-s", "002", "Standard", older),
+				printing("bats-gothic", "006-vampire_bats-b-s", "006", "Standard", newer),
 			},
 		},
 		{

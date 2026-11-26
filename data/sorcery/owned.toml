@@ -1,0 +1,27 @@
+# The cards that I own. An owned group selects cards like a want group in
+# proxies.toml. It counts copies of the printing that it picks, and the same
+# playset rule applies if it does not set quantity.
+#
+# A group with several sets and no named cards counts each set on its own,
+# such as one playset of each set.
+
+[[owned]]
+group = "playsets"
+note = "A playset of every Ordinary, Exceptional and Elite booster card of Beta, Arthurian Legends and Gothic. The basic Sites and the tokens come in other products."
+sets = ["002", "004", "006"]
+products = ["Booster"]
+rarities = ["Ordinary", "Exceptional", "Elite"]
+
+[[owned]]
+group = "frost-mage-vs-lavamancer"
+note = "The two-player box. Set the quantity of each card from the deck lists in the box."
+sets = ["008"]
+quantity = 1
+quantities = { "Polar Bears" = 2 }
+
+[[owned]]
+group = "box-toppers"
+note = "Check this list against the box toppers that I have."
+sets = ["002", "004", "006"]
+products = ["BoxTopper"]
+quantity = 1

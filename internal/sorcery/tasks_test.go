@@ -11,12 +11,13 @@ import (
 	"testing"
 )
 
-const testConfig = `pdf:
-  args: [--paper_size, tabloid]
-wants:
-  - group: uniques
-    sets: ["002", "004"]
-    rarity: Unique
+const testConfig = `[pdf]
+args = ["--paper_size", "tabloid"]
+
+[[want]]
+group = "uniques"
+sets = ["002", "004"]
+rarities = ["Unique"]
 `
 
 func testCatalogJSON() string {
@@ -102,7 +103,7 @@ func (rt rewriteTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 
 func TestStageAndRecordRun(t *testing.T) {
 	p, srv := testProject(t)
-	writeFile(t, p.Owned(), []byte("owned:\n  Sir Galahad: 1\n"))
+	writeFile(t, p.Owned(), []byte("[[owned]]\ngroup = \"mine\"\ncards = [\"Sir Galahad\"]\n"))
 
 	staged, err := StageRun(t.Context(), redirectImages(srv), p, "2026-11-25-1200")
 	if err != nil {
@@ -148,6 +149,17 @@ func TestStageAndRecordRun(t *testing.T) {
 	}
 }
 
+func TestPlanWithoutOwned(t *testing.T) {
+	p, _ := testProject(t)
+	planned, err := Plan(p)
+	if err != nil {
+		t.Fatalf("Plan: %v", err)
+	}
+	if planned.OwnedFrom != "" || Total(planned.Entries).Titles != 2 {
+		t.Errorf("Plan = owned from %q, %+v", planned.OwnedFrom, Total(planned.Entries))
+	}
+}
+
 func TestPDFArgsWithBacks(t *testing.T) {
 	p := NewPaths(t.TempDir())
 	writeFile(t, filepath.Join(p.Run("r1"), backDir, spellbookBackName), []byte("png"))
@@ -171,23 +183,6 @@ func TestPlanWithoutCatalog(t *testing.T) {
 	p := NewPaths(t.TempDir())
 	if _, err := Plan(p); err == nil || !strings.Contains(err.Error(), "mage sorcery:catalog") {
 		t.Errorf("Plan error = %v, want a hint to run mage sorcery:catalog", err)
-	}
-}
-
-func TestPlanPrefersCollection(t *testing.T) {
-	p, _ := testProject(t)
-	writeFile(t, p.Owned(), []byte("owned:\n  Not A Card: 1\n"))
-	writeFile(t, p.Collection(), []byte(`[{"printing_id": "vesuvius-beta", "quantity": 1}]`))
-
-	planned, err := Plan(p)
-	if err != nil {
-		t.Fatalf("Plan: %v", err)
-	}
-	if planned.OwnedFrom != p.Collection() {
-		t.Errorf("OwnedFrom = %s, want the collection", planned.OwnedFrom)
-	}
-	if total := Total(planned.Entries); total.Titles != 1 || total.Atlas != 0 {
-		t.Errorf("Total = %+v, want only Sir Galahad", total)
 	}
 }
 
@@ -227,7 +222,7 @@ func TestReport(t *testing.T) {
 		"Cards to print: 2. Spellbook copies: 4. Atlas copies: 0.",
 		"Cards already owned or printed: 1.",
 		"Fireball (153 PPI)",
-		"The run prints the front face only:\n  Druid",
+		"The run prints the front face only.",
 		"the PDF prints fronts only",
 	} {
 		if !strings.Contains(out, want) {

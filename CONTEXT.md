@@ -15,14 +15,16 @@ One printing of a card: one set, finish and product. A run prints the image of
 one printing of each card.
 _Avoid_: variant, version
 
-**Want group**:
-A named group of cards to proxy, with a quantity for each card, in
-`data/<game>/proxies.yaml`.
+**Group**:
+A named selection of cards, by name, set, product and rarity, with a number of
+copies of each card. A **want group** in `proxies.toml` asks for cards; an
+**owned group** in `owned.toml` records cards that are owned.
 _Avoid_: bucket, list
 
-**Collection**:
-The cards that are owned, by printing.
-_Avoid_: inventory
+**Playset**:
+The copies of a card that the deck limits allow, by rarity: Ordinary 4,
+Exceptional 3, Elite 2, and 1 for every other card. A group gets a playset of
+each card unless it sets a quantity.
 
 **Plan**:
 For each wanted card: the want, the owned and printed copies, and the copies

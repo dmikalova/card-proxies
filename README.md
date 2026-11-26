@@ -13,15 +13,16 @@ The first game is Sorcery: Contested Realm.
 A run prints, for each card: the want, minus the owned copies, minus the
 copies that earlier runs printed.
 
-| File                           | Source                                        |
-| ------------------------------ | --------------------------------------------- |
-| `data/sorcery/cards.json`      | The public sorcerytcg.com card catalog        |
-| `data/sorcery/proxies.yaml`    | The wants and the PDF flags, edited by hand   |
-| `data/sorcery/collection.json` | The owned cards, from the sorcerytcg.com site |
-| `data/sorcery/owned.yaml`      | The owned cards, edited by hand               |
-| `data/sorcery/printed.json`    | The ledger of printed runs                    |
+| File                        | Source                                      |
+| --------------------------- | ------------------------------------------- |
+| `data/sorcery/cards.json`   | The public sorcerytcg.com card catalog      |
+| `data/sorcery/proxies.toml` | The want groups and the PDF flags, by hand  |
+| `data/sorcery/owned.toml`   | The owned groups, by hand                   |
+| `data/sorcery/printed.json` | The ledger of printed runs, from the target |
 
-A run uses `owned.yaml` only if `collection.json` does not exist.
+A group selects cards by name, set, product and rarity. Each card gets a
+playset by rarity unless the group sets a quantity: Ordinary 4, Exceptional
+3, Elite 2, and 1 for Uniques, Avatars and tokens.
 
 ## Setup
 
@@ -33,37 +34,13 @@ A run uses `owned.yaml` only if `collection.json` does not exist.
    `backs/sorcery/spellbook.png` and `backs/sorcery/atlas.png`. Without them,
    the PDF prints fronts only. Git ignores these files.
 
-## Update the data
-
-Download the card catalog:
+## Update the catalog
 
 ```bash
 mage sorcery:catalog
 ```
 
-To read the owned cards from the sorcerytcg.com collection, add the session
-cookie to the macOS Keychain once:
-
-1. Sign in to sorcerytcg.com in a browser.
-2. Open the developer tools, and copy the `Cookie` request header of a
-   sorcerytcg.com request.
-3. Run this command, and paste the cookie at the prompt:
-
-   ```bash
-   security add-generic-password -a "$USER" -s card-proxies-sorcerytcg -w
-   ```
-
-Then download the collection:
-
-```bash
-mage sorcery:collection
-```
-
-The collection uses an endpoint that the sorcerytcg.com pages use. It is not a
-documented API, so it can change without notice. If the target fails, use
-`owned.yaml` instead.
-
-Commit the JSON files that the targets write.
+Commit `data/sorcery/cards.json`. A diff shows the new cards and printings.
 
 ## Print a run
 

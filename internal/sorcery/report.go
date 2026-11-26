@@ -14,7 +14,7 @@ type Report struct {
 	// Images holds the size of each staged image by printing slug. It is
 	// empty for a plan, which downloads nothing.
 	Images map[string]ImageInfo
-	// OwnedFrom names the file of the owned quantities.
+	// OwnedFrom names the file of the owned groups.
 	OwnedFrom string
 	// Staged reports whether the run is staged, and Backs whether it has
 	// card backs.
@@ -26,7 +26,7 @@ type Report struct {
 func (r *Report) Write(w io.Writer) error {
 	var b strings.Builder
 	if r.OwnedFrom == "" {
-		b.WriteString("Owned: nothing. Neither collection.json nor owned.yaml exists.\n\n")
+		b.WriteString("Owned: nothing. owned.toml does not exist.\n\n")
 	} else {
 		fmt.Fprintf(&b, "Owned: from %s.\n\n", r.OwnedFrom)
 	}
@@ -93,7 +93,7 @@ func (r *Report) Write(w io.Writer) error {
 	if len(doubleFaced) > 0 {
 		fmt.Fprintf(
 			&b,
-			"\nDouble-faced cards. The run prints the front face only:\n  %s\n",
+			"\nDouble-faced cards. The run prints the front face only. The back face image is <printing>-back.png:\n  %s\n",
 			strings.Join(doubleFaced, "\n  "),
 		)
 	}
