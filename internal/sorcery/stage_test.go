@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"image"
 	"image/color"
+	"image/jpeg"
 	"image/png"
 	"net/http"
 	"net/http/httptest"
@@ -71,23 +72,44 @@ func TestLoadBacks(t *testing.T) {
 		t.Fatalf("LoadBacks with no backs = %v, %v; want nil, nil", backs, err)
 	}
 
-	writeFile(t, filepath.Join(dir, spellbookBackName), pngBytes(t, 5, 7))
+	writeFile(t, filepath.Join(dir, spellbookBack+".png"), pngBytes(t, 5, 7))
 	if _, err := LoadBacks(dir); err == nil {
 		t.Fatal("LoadBacks accepted a spellbook back without an atlas back")
 	}
 
-	writeFile(t, filepath.Join(dir, atlasBackName), pngBytes(t, 7, 5))
+	writeFile(t, filepath.Join(dir, atlasBack+".jpeg"), jpegBytes(t, 7, 5))
 	backs, err = LoadBacks(dir)
 	if err != nil {
 		t.Fatalf("LoadBacks: %v", err)
 	}
 	cfg, err := png.DecodeConfig(bytes.NewReader(backs.Atlas))
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("the atlas back is not a PNG: %v", err)
 	}
 	if cfg.Width != 5 || cfg.Height != 7 {
-		t.Errorf("atlas back = %dx%d, want the landscape back turned to 5x7", cfg.Width, cfg.Height)
+		t.Errorf(
+			"atlas back = %dx%d, want the landscape JPEG turned to a 5x7 PNG",
+			cfg.Width,
+			cfg.Height,
+		)
 	}
+
+	writeFile(t, filepath.Join(dir, atlasBack+".png"), pngBytes(t, 7, 5))
+	if _, err := LoadBacks(
+		dir,
+	); err == nil ||
+		!strings.Contains(err.Error(), "atlas.png and atlas.jpeg") {
+		t.Errorf("LoadBacks error = %v, want a refusal of two atlas backs", err)
+	}
+}
+
+func jpegBytes(t *testing.T, w, h int) []byte {
+	t.Helper()
+	var b bytes.Buffer
+	if err := jpeg.Encode(&b, image.NewRGBA(image.Rect(0, 0, w, h)), nil); err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+	return b.Bytes()
 }
 
 func TestStage(t *testing.T) {

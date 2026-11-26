@@ -93,5 +93,7 @@ tmp/
 
 # This project's additions, from ignore.git in mklv.config.json. Edit them there.
 /backs/**/*.png
+/backs/**/*.jpg
+/backs/**/*.jpeg
 /cache/
 /runs/

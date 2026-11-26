@@ -7,11 +7,14 @@ import (
 	"fmt"
 	"image"
 	"image/draw"
+	// Registers JPEG for image.Decode, for card backs.
+	_ "image/jpeg"
 	"image/png"
 	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // cardWidthInches is the width of a standard card, 63 mm.
@@ -20,11 +23,18 @@ const cardWidthInches = 63.0 / 25.4
 // MinPPI is the resolution below which a card image prints soft.
 const MinPPI = 250
 
-// Back image names in the backs directory.
+// Back image names in the backs directory, without the extension. Each can
+// be a PNG or a JPEG.
 const (
-	spellbookBackName = "spellbook.png"
-	atlasBackName     = "atlas.png"
+	spellbookBack = "spellbook"
+	atlasBack     = "atlas"
 )
+
+// backExtensions are the file extensions of a card back image.
+var backExtensions = []string{".png", ".jpg", ".jpeg"}
+
+// spellbookBackName is the spellbook back in a run's back directory.
+const spellbookBackName = "spellbook.png"
 
 // Run directories that silhouette-card-maker reads.
 const (
@@ -41,15 +51,16 @@ type Backs struct {
 	Atlas []byte
 }
 
-// LoadBacks reads spellbook.png and atlas.png from dir. It returns nil if
-// neither exists, which prints fronts only. One without the other is an
-// error, because Sites would get the spellbook back.
+// LoadBacks reads the spellbook and atlas backs from dir, as PNG or JPEG,
+// and returns them as PNG. It returns nil if neither exists, which prints
+// fronts only. One without the other is an error, because Sites would get
+// the spellbook back.
 func LoadBacks(dir string) (*Backs, error) {
-	spellbook, err := readOptional(filepath.Join(dir, spellbookBackName))
+	spellbook, err := readBack(dir, spellbookBack)
 	if err != nil {
 		return nil, err
 	}
-	atlas, err := readOptional(filepath.Join(dir, atlasBackName))
+	atlas, err := readBack(dir, atlasBack)
 	if err != nil {
 		return nil, err
 	}
@@ -58,17 +69,48 @@ func LoadBacks(dir string) (*Backs, error) {
 		return nil, nil
 	case spellbook == nil || atlas == nil:
 		return nil, fmt.Errorf(
-			"put both %s and %s in %s, or neither to print fronts only",
-			spellbookBackName,
-			atlasBackName,
+			"put both a %s and an %s back (PNG or JPEG) in %s, or neither to print fronts only",
+			spellbookBack,
+			atlasBack,
 			dir,
 		)
 	}
-	portrait, err := portraitPNG(atlas)
+	spellbookPNG, err := toPNG(spellbook, false)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", atlasBackName, err)
+		return nil, fmt.Errorf("%s back: %w", spellbookBack, err)
 	}
-	return &Backs{Spellbook: spellbook, Atlas: portrait}, nil
+	atlasPNG, err := toPNG(atlas, true)
+	if err != nil {
+		return nil, fmt.Errorf("%s back: %w", atlasBack, err)
+	}
+	return &Backs{Spellbook: spellbookPNG, Atlas: atlasPNG}, nil
+}
+
+// readBack reads the back image of name with one of backExtensions. It
+// returns nil if there is none, and an error if there are several.
+func readBack(dir, name string) ([]byte, error) {
+	var found []string
+	var data []byte
+	for _, ext := range backExtensions {
+		path := filepath.Join(dir, name+ext)
+		d, err := readOptional(path)
+		if err != nil {
+			return nil, err
+		}
+		if d != nil {
+			found = append(found, filepath.Base(path))
+			data = d
+		}
+	}
+	if len(found) > 1 {
+		return nil, fmt.Errorf(
+			"keep one %s back in %s, not %s",
+			name,
+			dir,
+			strings.Join(found, " and "),
+		)
+	}
+	return data, nil
 }
 
 // readOptional reads a file, and returns nil data if it does not exist.
@@ -83,19 +125,18 @@ func readOptional(path string) ([]byte, error) {
 	return data, nil
 }
 
-// portraitPNG turns a landscape PNG a quarter turn clockwise. A portrait PNG
-// stays as it is.
-func portraitPNG(data []byte) ([]byte, error) {
-	img, err := png.Decode(bytes.NewReader(data))
+// toPNG decodes a PNG or JPEG image and encodes it as PNG. With portrait, it
+// turns a landscape image a quarter turn clockwise.
+func toPNG(data []byte, portrait bool) ([]byte, error) {
+	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
-		return nil, fmt.Errorf("decode the PNG: %w", err)
+		return nil, fmt.Errorf("decode the image: %w", err)
 	}
-	b := img.Bounds()
-	if b.Dx() <= b.Dy() {
-		return data, nil
+	if b := img.Bounds(); portrait && b.Dx() > b.Dy() {
+		img = rotateClockwise(img)
 	}
 	var out bytes.Buffer
-	if err := png.Encode(&out, rotateClockwise(img)); err != nil {
+	if err := png.Encode(&out, img); err != nil {
 		return nil, fmt.Errorf("encode the PNG: %w", err)
 	}
 	return out.Bytes(), nil

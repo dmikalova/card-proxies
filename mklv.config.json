@@ -4,6 +4,8 @@
   "ignore": {
     "git": [
       "/backs/**/*.png",
+      "/backs/**/*.jpg",
+      "/backs/**/*.jpeg",
       "/cache/",
       "/runs/"
     ]

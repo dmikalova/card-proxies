@@ -30,9 +30,10 @@ playset by rarity unless the group sets a quantity: Ordinary 4, Exceptional
 2. Clone silhouette-card-maker to
    `~/Code/github.com/Alan-Cha/silhouette-card-maker`, and make its `venv` as
    its README says. Set `SILHOUETTE_CARD_MAKER` to use a different path.
-3. Optional: scan a spellbook card back and an atlas card back. Save them as
-   `backs/sorcery/spellbook.png` and `backs/sorcery/atlas.png`. Without them,
-   the PDF prints fronts only. Git ignores these files.
+3. Optional: save a spellbook card back and an atlas card back as
+   `backs/sorcery/spellbook` and `backs/sorcery/atlas`, each a `.png`, `.jpg`
+   or `.jpeg`. Without them, the PDF prints fronts only. Git ignores these
+   files.
 
 ## Update the catalog
 
