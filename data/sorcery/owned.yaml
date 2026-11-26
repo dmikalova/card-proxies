@@ -1,0 +1,8 @@
+# The cards that I own, by name. A run uses this file only if
+# data/sorcery/collection.json does not exist. Run "mage sorcery:collection"
+# to make collection.json from the sorcerytcg.com collection.
+#
+# Only the cards that a want group selects matter here, such as Uniques.
+#
+# owned:
+#   Sir Galahad: 1

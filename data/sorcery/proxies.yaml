@@ -1,0 +1,81 @@
+# The PDF settings and the wants for Sorcery: Contested Realm proxies.
+#
+# Each want group selects cards by name, by set code, by rarity, or by a mix
+# of these. Set codes come from data/sorcery/cards.json:
+#   001 Alpha, 002 Beta, 004 Arthurian Legends, 005 Dragonlord, 006 Gothic,
+#   008 Frost Mage Vs. Lavamancer, 999 Promo.
+#
+# A run prints, for each card: the want, minus the owned copies, minus the
+# copies already printed. If two groups want the same card, the run uses the
+# larger want, not the sum.
+#
+# Run "mage sorcery:plan" after each change to see the result.
+
+pdf:
+  # The create_pdf.py flags for every run. The run adds the card directories,
+  # the output path and, if there are no card backs, --only_fronts.
+  args:
+    - --paper_size
+    - tabloid
+    # A number without a unit is pixels at 300 PPI. Use 3mm for millimeters.
+    - --extend_edges
+    - "3"
+    - --skip
+    - "4"
+    - --fit_backs
+    - crop
+
+wants:
+  - group: uniques
+    note: I own every Ordinary, Exceptional and Elite of these sets, but not the Uniques.
+    sets: ["002", "004", "006"]
+    rarity: Unique
+    quantity: 1
+
+  - group: dragonlord
+    note: The Dragonlord mini-set has 12 Uniques and the Dragonlord Avatar.
+    sets: ["005"]
+    quantity: 1
+
+  - group: beta-avatars
+    note: The Beta Avatars of the elements.
+    cards: [Flamecaller, Geomancer, Sparkmage, Waveshaper]
+    sets: ["002"]
+    quantity: 1
+
+  - group: dust-courts
+    note: The Elite Court Sites from the Dust store.
+    cards: [Court of Equity, Mobbed Court, Mock Court, Overflowing Court]
+    quantity: 1
+
+  - group: errata
+    # Disabled: a card image shows the printed rules text. For most of these
+    # cards, the newest printing is the one I own, so a proxy shows the same
+    # old text. Fireball and Polar Bears have a newer printing in Frost Mage
+    # Vs. Lavamancer. Make sure that the image of each card shows the errata
+    # before you enable this group.
+    disabled: true
+    note: Updated rules text for errata and reforged cards.
+    ignore_owned: true
+    playset: true
+    cards:
+      - Sir Galahad
+      - Druid
+      - Infiltrate
+      - Lord of Lies
+      - Mirage
+      - Deathspeaker
+      - Grim Guisarme
+      - Mask of Mayhem
+      - Seirawan Hydra
+      - Fireball
+      - Daperyll Vampire
+      - Blood Ravens
+      - Vampire Bats
+      - Lance
+      - Polar Bears
+    quantities:
+      # Lance is a token, so the playset rule gives 1.
+      Lance: 4
+      # Frost Mage Vs. Lavamancer has 2 copies with the new text.
+      Polar Bears: 2
